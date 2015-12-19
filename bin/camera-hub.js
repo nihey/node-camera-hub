@@ -12,7 +12,8 @@ var cli = meow({
     '  camera-hub <stream-url> [options]',
     '',
     'Options:',
-    '  -d, --domain     which name will you be sharing your camera',
+    '  -d, --domain <domain> which domain will be sharing your camera upon',
+    '  -f, --frames          log incoming frames',
     '',
   ]
 });
@@ -25,13 +26,24 @@ var domain = Math.random().toString(32).split('.')[1];
 if (cli.flags.d || cli.flags.domain) {
   domain = cli.flags.d || cli.flags.domain;
 }
+console.log('Using domain:', domain);
 
-var peers = new MultiRTC({channel: true, wrtc: require('wrtc')});
+var socket;
+var peers = new MultiRTC({
+  channel: true,
+  wrtc: require('wrtc'),
+  atob: require('atob'),
+  btoa: require('btoa'),
+});
+
 var snapshooter = new Snapshooter(cli.input[0], function(frame) {
-  console.log('FRAME:', frame);
+  if (cli.flags.f || cli.flags.frames) {
+    console.log('FRAME:', frame);
+  }
 });
 
 var events = {
+  /* The peer is requesting for a frame */
   frame: function(id) {
     if (!snapshooter.frame) {
       return;
@@ -41,8 +53,17 @@ var events = {
   },
 };
 
+peers.on('signal', function(id, signal) {
+  socket.emit('signal', {
+    dest: id,
+    signal: signal,
+  });
+});
+
 peers.on('connect', function(id) {
   console.log('connected to peer', id);
+  // Tell the peer that you're the camera, and you'll be sending the stream
+  peers.send('CAMERA-AVAILABLE', id);
 });
 
 peers.on('data', function(id, data) {
@@ -55,7 +76,7 @@ peers.on('disconnect', function(id) {
 });
 
 var connect = function() {
-  var socket = io('ws://nihey.org:9091', {
+  socket = io('ws://nihey.org:9091', {
     'force new connection': true,
     'max reconnection attempts': Infinity,
   });

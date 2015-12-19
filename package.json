@@ -28,6 +28,8 @@
     "eslint": "^1.6.0"
   },
   "dependencies": {
+    "atob": "^2.0.0",
+    "btoa": "^1.1.2",
     "buffer-indexof": "^1.0.0",
     "meow": "^3.6.0",
     "multi-rtc": "0.0.1",
