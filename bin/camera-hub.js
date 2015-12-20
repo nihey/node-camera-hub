@@ -91,7 +91,7 @@ var connect = function() {
 
   socket.on('connect', function() {
     console.log('connected to the signal server');
-    socket.emit('join', domain);
+    socket.emit('join-camera', domain);
   });
 
   socket.on('joined', function(id) {
