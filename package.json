@@ -2,7 +2,6 @@
   "name": "camera-hub",
   "version": "0.0.0",
   "description": "Capture MJPEG streams and send them via WebRTC",
-  "main": "./lib/index.js",
   "bin": {
     "camera-hub": "./bin/camera-hub.js"
   },

@@ -74,14 +74,31 @@ let Index = React.createClass({
   componentDidMount: function() {
     this.refs.domain.focus();
 
+    // Keep checking if frames are being received regularly
+    setInterval(() => {
+      if (!this.lastUpdate) {
+        return;
+      };
+
+      // If no frame has been received in the past 5 seconds, request for a
+      // frame again.
+      let delta = new Date() - this.lastUpdate;
+      if (delta > 5000) {
+        peers.send({type: 'frame'}, this.cameraId);
+      }
+    }, 5000);
+
     peers.on('data', (id, data) => {
+      this.lastUpdate = new Date();
+
       if (data === 'CAMERA-AVAILABLE') {
-        this.setState({cameraPeer: id, loading: false});
+        this.cameraId = id;
+        this.setState({cameraId: id, loading: false});
         return peers.send({type: 'frame'}, id);
       }
 
       // Ask for the next frame;
-      peers.send({type: 'frame'});
+      peers.send({type: 'frame'}, this.cameraId);
       // Don't use React to update this, so we don't get frame delay
       document.getElementById('stream').src = "data:image/png;base64," + data.content;
     });
@@ -106,9 +123,9 @@ let Index = React.createClass({
       </section>;
     }
 
-    if (this.state.cameraPeer) {
+    if (this.state.cameraId) {
       return <div>
-        <img id="stream" src={"data:image/png;base64," + this.state.image}/>
+        <img id="stream"/>
       </div>
     }
 

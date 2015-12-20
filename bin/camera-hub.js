@@ -49,7 +49,15 @@ var events = {
       return;
     }
 
-    peers.sendBlob(snapshooter.frame.toString('base64'));
+    var frame = snapshooter.frame.toString('base64');
+    // Limit the FPS by 20 to avoid overloading the CPU
+    setTimeout(function() {
+      try {
+        peers.sendBlob(frame, id);
+      } catch (e) {
+        console.error(e);
+      }
+    }, 50);
   },
 };
 
